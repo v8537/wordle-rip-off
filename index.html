@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>wordle rip-off</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>wordle rip-off</h1>
+      <p class="subtitle">guess the word in 6 tries. each guess must be a real 5-letter word. same word as the real nyt wordle, every day.</p>
+      <p class="daynum" id="day-number"></p>
+    </header>
+
+    <main>
+      <div class="board-wrap">
+        <div id="toast" class="toast" hidden></div>
+        <div class="board" id="board"></div>
+      </div>
+
+      <div class="keyboard" id="keyboard"></div>
+
+      <div class="result" id="result-panel" hidden>
+        <h2 id="result-title"></h2>
+        <p id="result-detail"></p>
+        <div class="share-block">
+          <pre id="share-text"></pre>
+          <button id="copy-btn">copy results</button>
+          <span id="copy-confirm" class="copy-confirm" hidden>copied</span>
+        </div>
+        <p class="countdown">next word in <span id="countdown"></span> (your local midnight)</p>
+      </div>
+    </main>
+
+    <footer>
+      <p>resets daily at your local midnight -- same word as the real nyt wordle on any given calendar day.</p>
+    </footer>
+  </div>
+
+<script src="script.js"></script>
+</body>
+</html>
