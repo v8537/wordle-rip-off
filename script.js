@@ -43,6 +43,26 @@ const shareText = document.getElementById('share-text');
 const copyBtn = document.getElementById('copy-btn');
 const copyConfirm = document.getElementById('copy-confirm');
 const countdownEl = document.getElementById('countdown');
+const authStatus = document.getElementById('auth-status');
+const authOpenBtn = document.getElementById('auth-open-btn');
+const authLogoutBtn = document.getElementById('auth-logout-btn');
+const authModal = document.getElementById('auth-modal');
+const authTabs = document.querySelectorAll('.auth-tab');
+const authForm = document.getElementById('auth-form');
+const authUsernameInput = document.getElementById('auth-username');
+const authPasswordInput = document.getElementById('auth-password');
+const authError = document.getElementById('auth-error');
+const authSubmitBtn = document.getElementById('auth-submit-btn');
+const authCloseBtn = document.getElementById('auth-close-btn');
+const statsBlock = document.getElementById('stats-block');
+const statsPrompt = document.getElementById('stats-prompt');
+const statsLoginBtn = document.getElementById('stats-login-btn');
+const personalHistogram = document.getElementById('personal-histogram');
+const todayHistogram = document.getElementById('today-histogram');
+
+// Same Cloudflare Quick Tunnel backend as angle-rip-off -- see that repo's script.js for the
+// stability caveat (URL only changes if the tunnel process itself restarts).
+const BACKEND_URL = 'https://sorry-bear-tops-desire.trycloudflare.com';
 
 // ---- Board / keyboard construction -----------------------------------------------------------
 
@@ -132,6 +152,182 @@ function updateKeyboardState(guess, result) {
   }
 }
 
+// ---- Auth -----------------------------------------------------------------------------------
+
+const AUTH_KEY = 'wordle-rip-off:auth';
+
+function loadAuth() {
+  try {
+    const raw = localStorage.getItem(AUTH_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
+function saveAuth(next) {
+  if (next) localStorage.setItem(AUTH_KEY, JSON.stringify(next));
+  else localStorage.removeItem(AUTH_KEY);
+}
+
+let auth = loadAuth(); // { token, username } | null
+let authMode = 'login';
+
+function updateAuthUI() {
+  if (auth) {
+    authStatus.hidden = false;
+    authStatus.textContent = `logged in as ${auth.username}`;
+    authOpenBtn.hidden = true;
+    authLogoutBtn.hidden = false;
+  } else {
+    authStatus.hidden = true;
+    authOpenBtn.hidden = false;
+    authLogoutBtn.hidden = true;
+  }
+}
+
+function setAuthMode(mode) {
+  authMode = mode;
+  authTabs.forEach((t) => t.classList.toggle('active', t.dataset.tab === mode));
+  authSubmitBtn.textContent = mode === 'login' ? 'log in' : 'sign up';
+  authPasswordInput.autocomplete = mode === 'login' ? 'current-password' : 'new-password';
+  authError.hidden = true;
+}
+
+function openAuthModal() {
+  authModal.hidden = false;
+  authError.hidden = true;
+  authUsernameInput.focus();
+}
+
+function closeAuthModal() {
+  authModal.hidden = true;
+  authForm.reset();
+}
+
+authOpenBtn.addEventListener('click', openAuthModal);
+statsLoginBtn.addEventListener('click', openAuthModal);
+authCloseBtn.addEventListener('click', closeAuthModal);
+authModal.addEventListener('click', (e) => { if (e.target === authModal) closeAuthModal(); });
+authTabs.forEach((t) => t.addEventListener('click', () => setAuthMode(t.dataset.tab)));
+
+authLogoutBtn.addEventListener('click', () => {
+  auth = null;
+  saveAuth(null);
+  updateAuthUI();
+  statsBlock.hidden = true;
+  statsPrompt.hidden = state.status === 'playing';
+});
+
+authForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const username = authUsernameInput.value.trim();
+  const password = authPasswordInput.value;
+  authError.hidden = true;
+  authSubmitBtn.disabled = true;
+  try {
+    const res = await fetch(`${BACKEND_URL}/api/wordle/${authMode}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      authError.textContent = data.error || 'something went wrong';
+      authError.hidden = false;
+      return;
+    }
+    auth = { token: data.token, username: data.username };
+    saveAuth(auth);
+    updateAuthUI();
+    closeAuthModal();
+    if (state.status !== 'playing') {
+      submitResult();
+      loadStats();
+    }
+  } catch {
+    authError.textContent = 'network error -- try again';
+    authError.hidden = false;
+  } finally {
+    authSubmitBtn.disabled = false;
+  }
+});
+
+// ---- Stats: personal guess-distribution histogram + today's cohort comparison ----------------
+
+const HIST_LABELS = ['1', '2', '3', '4', '5', '6', 'X'];
+
+function renderHistogram(container, distribution, fails, highlightLabel) {
+  container.innerHTML = '';
+  const counts = ['1', '2', '3', '4', '5', '6'].map((k) => distribution[k] || 0).concat([fails || 0]);
+  const total = counts.reduce((a, b) => a + b, 0);
+  if (total === 0) {
+    const p = document.createElement('p');
+    p.className = 'stats-empty';
+    p.textContent = 'no games recorded yet.';
+    container.appendChild(p);
+    return;
+  }
+  const max = Math.max(...counts);
+  HIST_LABELS.forEach((label, i) => {
+    const count = counts[i];
+    const pct = max > 0 ? Math.round((count / max) * 100) : 0;
+    const row = document.createElement('div');
+    row.className = 'hist-row';
+    if (label === highlightLabel) row.classList.add('highlight');
+    row.innerHTML = `
+      <span class="hist-label">${label}</span>
+      <div class="hist-track"><div class="hist-bar" style="width:${pct}%"></div></div>
+      <span class="hist-count">${count}</span>
+    `;
+    container.appendChild(row);
+  });
+}
+
+async function loadStats() {
+  if (!auth || state.status === 'playing') return;
+  const highlightLabel = state.status === 'won' ? String(state.guesses.length) : 'X';
+  try {
+    const [statsRes, todayRes] = await Promise.all([
+      fetch(`${BACKEND_URL}/api/wordle/stats`, {
+        headers: { Authorization: `Bearer ${auth.token}` },
+      }),
+      fetch(`${BACKEND_URL}/api/wordle/today-comparison?day=${answerData.print_date}`),
+    ]);
+    if (!statsRes.ok || !todayRes.ok) throw new Error('stats fetch failed');
+    const stats = await statsRes.json();
+    const today = await todayRes.json();
+
+    statsPrompt.hidden = true;
+    statsBlock.hidden = false;
+    renderHistogram(personalHistogram, stats.distribution, stats.fails, highlightLabel);
+    renderHistogram(todayHistogram, today.distribution, today.fails, highlightLabel);
+  } catch {
+    // Backend unreachable -- leave the login prompt/stats block as-is rather than erroring out.
+  }
+}
+
+async function submitResult() {
+  if (!auth || state.resultSubmitted || state.status === 'playing') return;
+  try {
+    const res = await fetch(`${BACKEND_URL}/api/wordle/result`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${auth.token}` },
+      body: JSON.stringify({
+        day: answerData.print_date,
+        won: state.status === 'won',
+        tries: state.status === 'won' ? state.guesses.length : null,
+      }),
+    });
+    if (res.ok) {
+      state.resultSubmitted = true;
+      saveState();
+    }
+  } catch {
+    // Result just won't count toward stats this time -- the game itself already finished fine.
+  }
+}
+
 // ---- Game state ------------------------------------------------------------------------------
 
 let answerData = null; // { id, solution, print_date, days_since_launch }
@@ -216,6 +412,15 @@ function renderResult() {
     ? `the word was ${answerData.solution.toUpperCase()}.`
     : `the word was ${answerData.solution.toUpperCase()}.`;
   shareText.textContent = buildShareText();
+
+  if (auth) {
+    statsPrompt.hidden = true;
+    submitResult();
+    loadStats();
+  } else {
+    statsBlock.hidden = true;
+    statsPrompt.hidden = false;
+  }
 }
 
 // ---- Input handling ----------------------------------------------------------------------------
@@ -357,6 +562,7 @@ async function boot() {
   buildBoard();
   buildKeyboard();
   renderSubmittedRows();
+  updateAuthUI();
 
   if (state.status !== 'playing') {
     renderResult();

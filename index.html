@@ -12,7 +12,28 @@
       <h1>wordle rip-off</h1>
       <p class="subtitle">guess the word in 6 tries. each guess must be a real 5-letter word. same word as the real nyt wordle, every day.</p>
       <p class="daynum" id="day-number"></p>
+      <div class="auth-bar">
+        <span class="auth-status" id="auth-status" hidden></span>
+        <button class="auth-link" id="auth-open-btn" type="button">log in / sign up</button>
+        <button class="auth-link" id="auth-logout-btn" type="button" hidden>log out</button>
+      </div>
     </header>
+
+    <div class="auth-modal" id="auth-modal" hidden>
+      <div class="auth-modal-inner">
+        <div class="auth-tabs">
+          <button type="button" class="auth-tab active" data-tab="login">log in</button>
+          <button type="button" class="auth-tab" data-tab="signup">sign up</button>
+        </div>
+        <form id="auth-form">
+          <input type="text" id="auth-username" placeholder="username" autocomplete="username" maxlength="24" required>
+          <input type="password" id="auth-password" placeholder="password" autocomplete="current-password" required>
+          <p class="auth-error" id="auth-error" hidden></p>
+          <button type="submit" id="auth-submit-btn">log in</button>
+        </form>
+        <button type="button" class="auth-close" id="auth-close-btn">close</button>
+      </div>
+    </div>
 
     <main>
       <div class="board-wrap">
@@ -31,6 +52,17 @@
           <span id="copy-confirm" class="copy-confirm" hidden>copied</span>
         </div>
         <p class="countdown">next word in <span id="countdown"></span> (your local midnight)</p>
+
+        <div class="stats-block" id="stats-block" hidden>
+          <h3 class="stats-title">your guess distribution</h3>
+          <div class="histogram" id="personal-histogram"></div>
+          <h3 class="stats-title">today's players</h3>
+          <div class="histogram" id="today-histogram"></div>
+        </div>
+        <p class="stats-prompt" id="stats-prompt" hidden>
+          <button type="button" class="auth-link" id="stats-login-btn">log in</button>
+          to see your stats and how you compare to today's players.
+        </p>
       </div>
     </main>
 
