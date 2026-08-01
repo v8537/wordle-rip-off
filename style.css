@@ -109,6 +109,10 @@ h1 {
   padding: 20px;
 }
 
+.auth-modal[hidden] {
+  display: none;
+}
+
 .auth-modal-inner {
   background: var(--panel);
   border: 1px solid var(--border);
