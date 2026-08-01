@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.wordle.scrape</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/usr/bin/python3</string>
+        <string>/Users/yogman/wordle-rip-off/scripts/scrape_word.py</string>
+    </array>
+    <key>WorkingDirectory</key>
+    <string>/Users/yogman/wordle-rip-off</string>
+    <key>StartInterval</key>
+    <integer>1800</integer>
+    <key>StandardOutPath</key>
+    <string>/Users/yogman/wordle-rip-off/logs/scrape.log</string>
+    <key>StandardErrorPath</key>
+    <string>/Users/yogman/wordle-rip-off/logs/scrape.err.log</string>
+</dict>
+</plist>
