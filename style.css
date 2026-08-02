@@ -13,6 +13,10 @@
   --wordle-correct: #6aaa64;
   --wordle-present: #c9b458;
   --wordle-absent: #787c7f;
+
+  /* Not-yet-guessed keyboard keys -- deliberately its own variable, not --border, so it can be
+  tuned per-theme for contrast against --wordle-absent without touching unrelated border lines. */
+  --key-default: var(--border);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -30,6 +34,11 @@
     --wordle-correct: #538d4e;
     --wordle-present: #b59f3b;
     --wordle-absent: #3a3a3c;
+
+    /* Was defaulting to --border (#33333c), only a few RGB units off --wordle-absent (#3a3a3c) --
+    untried and "letter not in word" keys were nearly indistinguishable in dark mode. Lighter and
+    clearly distinct instead, matching the real app's own untried-vs-absent contrast direction. */
+    --key-default: #56565f;
   }
 }
 
@@ -270,7 +279,7 @@ h1 {
   height: clamp(40px, 12vw, 50px);
   border: none;
   border-radius: 6px;
-  background: var(--border);
+  background: var(--key-default);
   color: var(--text);
   font-weight: 600;
   font-size: 0.95rem;
