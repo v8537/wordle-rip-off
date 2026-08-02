@@ -401,7 +401,7 @@ function buildShareText() {
   const grid = state.guesses
     .map((g) => g.result.map((r) => (r === 'correct' ? '\u{1F7E9}' : r === 'present' ? '\u{1F7E8}' : '\u{2B1B}')).join(''))
     .join('\n');
-  return `Wordle ${puzzleNum} ${tries}\n\n${grid}`;
+  return `Wordle ${puzzleNum} ${tries}\n\n${grid}\n\nhttps://v8537.github.io/wordle-rip-off/`;
 }
 
 function renderResult() {

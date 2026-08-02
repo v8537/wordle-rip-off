@@ -280,6 +280,12 @@ h1 {
   border: none;
   border-radius: 6px;
   background: var(--key-default);
+  /* Rapid taps on the on-screen keyboard were getting interpreted as a double-tap-to-zoom
+  gesture on mobile Safari/Chrome. touch-action: manipulation tells the browser this element's
+  taps are for interaction, not zooming, without disabling pinch-zoom elsewhere on the page
+  (the old fix, maximum-scale=1/user-scalable=no in the viewport meta, kills zoom accessibility
+  site-wide -- this is scoped and doesn't). */
+  touch-action: manipulation;
   color: var(--text);
   font-weight: 600;
   font-size: 0.95rem;
