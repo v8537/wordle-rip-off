@@ -1,11 +1,4 @@
 {
-  "2026-07-30": {
-    "id": 3148,
-    "solution": "flume",
-    "print_date": "2026-07-30",
-    "days_since_launch": 1867,
-    "editor": "Tracy Bennett"
-  },
   "2026-07-31": {
     "id": 665,
     "solution": "purse",
@@ -53,6 +46,13 @@
     "solution": "gripe",
     "print_date": "2026-08-06",
     "days_since_launch": 1874,
+    "editor": "Tracy Bennett"
+  },
+  "2026-08-07": {
+    "id": 3091,
+    "solution": "feign",
+    "print_date": "2026-08-07",
+    "days_since_launch": 1875,
     "editor": "Tracy Bennett"
   }
 }
